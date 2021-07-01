@@ -1,8 +1,8 @@
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Objects;
+import java.util.stream.Stream;
 
 
 public class Main {
@@ -31,11 +31,29 @@ public class Main {
             return;
         }
 
-            String[] values = inputString.split("[^0-9]",0);
-               int nums = Integer.parseInt(String.valueOf(values));
-
+            String[] valuesString = inputString.split("[^0-9]",0);
+                int[] valuesInt = Stream.of(valuesString).mapToInt(Integer::parseInt).toArray();
+                  for(int i = 0; i > 0; i++){
+                      try{
+                          valuesInt[i] = Integer.parseInt(args[i]);
+                      }catch(NumberFormatException e){
+                          System.out.println("正しく数値が入力されていません");
+                      }
+                  }
             String[] operators = inputString.split("[0-9]",0);
+                for(int i = 0; i > 0; i++ ){
+                    if(valuesString[i].equals("+")){
 
+                    }else if(valuesString[i].equals("-")) {
+
+                    }else if(valuesString[i].equals("/")){
+
+                    }else if(valuesString[i].equals("*")){
+
+                    }else{
+                        System.out.println("演算子が正しく入力されていません");
+                    }
+                }
 
 
 
