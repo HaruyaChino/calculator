@@ -1,7 +1,11 @@
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import static java.lang.System.out;
 
 
@@ -15,77 +19,121 @@ public class Main {
             out.println("計算式を入力してください(演算子は +、-、＊、/ の中から入力してください)");
             out.print("式："); //入力式受け取り
             String inputString = null;
+            try {
+                inputString = br.readLine();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            //文字列中のスペース無視
+            String calc = Objects.requireNonNull(inputString).replaceAll(" ", "");
+
+            //"end"と入力するとプロセスを閉じる
+            if (inputString.equals("end") || inputString.equals("END")) {
                 try {
-                    inputString = br.readLine();
+                    br.close();
+                    isr.close();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-            //文字列中のスペース無視
-            String calc = Objects.requireNonNull(inputString).replaceAll(" ","");
-                System.out.println(calc);
-                //"end"と入力するとプロセスを閉じる
-                if (inputString.equals("end") || inputString.equals("END")) {
-                    try {
-                        br.close();
-                        isr.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                    out.println("計算を終了します");
-                    return;
+                out.println("計算を終了します");
+                return;
 
-                }
+            }
 
             //配列numberに整数部分を分割し格納
-            String[] number = calc.split("[^0-9]",0);
-                if(number.length != 2){
-                    System.out.println("整数は二つだけ入力してください");
-                    return;
-                }
+            String[] numberString = calc.split("[^0-9]", 0);
+            int[] numberInt = Stream.of(numberString).mapToInt(Integer::parseInt).toArray();
+            ArrayList<Integer> numList = (ArrayList<Integer>) Arrays.stream(numberInt).boxed().collect(Collectors.toList());
+            if (numList.size() <= 1) {
+                System.out.println("整数エラー");
+                return;
+            }
+
             //配列operatorに演算子部分を分割し格納
-            //このときoperator[0]="" operator[1]="入力した四則演算子" の順で格納される
-            String[] operator = calc.split("[0-9]+",0);
-                if(operator.length != 2||!(operator[0].equals(""))){
-                    System.out.println("式エラー");
+            String[] operator = calc.split("[0-9]+", 0);
+            ArrayList<String> opList = new ArrayList<>(Arrays.asList(operator));
+            //operator[0]に "" が格納されているためArrayListのremoveで削除
+            opList.remove(0);
+            opList.add("");
+            if (opList.size() < 1 ) {
+                //opの格納がない場合のエラー
+                System.out.println("式エラー");
+                return;
+            }
+            ArrayList<Integer> sumList = new ArrayList<>();
+            for (int i = 0; i < opList.size(); ++i) {
+                //opが + - * / 以外の場合のエラー
+                if (!(opList.get(i).equals("*")) && !(opList.get(i).equals("/")) && !(opList.get(i).equals("+")) && !(opList.get(i).equals("-")) && !(opList.get(i).equals(""))) {
+                    System.out.println("演算子エラー");
                     return;
+
                 }
 
-            //operatorの条件分岐
-                int total ;
-                int remainder;
-                switch (operator[1]) {
+
+                switch (opList.get(i)) {
                     case "+":
-                      total = Integer.parseInt(number[0]) + Integer.parseInt(number[1]);
-                      System.out.println(total);
-                      break;
-
+                        sumList.add(numList.get(i));
+                        break;
                     case "-":
-                        total = Integer.parseInt(number[0]) - Integer.parseInt(number[1]);
-                        System.out.println(total);
+                        sumList.add(numList.get(i));
+                        numList.set(i + 1, -(numList.get(i + 1)));
+                        break;
+                    case "*" :
+
+                        String result = priorityOperator(numList.get(i), numList.get(i + 1), opList.get(i));
+                        numList.set(i + 1, Integer.parseInt(result));
+
                         break;
 
-                    case "*":
-                        total = Integer.parseInt(number[0]) * Integer.parseInt(number[1]);
-                        System.out.println(total);
-                        break;
-                    case "/":
+                    case "/" :
 
-                        if(number[1].equals("0")){
-                            out.println("除算エラー");
+                        result = priorityOperator(numList.get(i), numList.get(i + 1), opList.get(i));
+                        if (result.equals("0除算エラー")) {
+                            System.out.println("0除算エラー");
                             return;
                         }
+                        numList.set(i + 1, Integer.parseInt(result));
 
-                        total = Integer.parseInt(number[0]) / Integer.parseInt(number[1]);
-                        remainder = Integer.parseInt(number[0]) % Integer.parseInt(number[1]);
-                        System.out.println(total + "余り" + remainder);
+                        break;
+
+                    case "":
+                        sumList.add(numList.get(numList.size() - 1));
                         break;
 
                     default:
-                        System.out.println("演算子エラー");
                         return;
-                    }
-
-
+                }
+            }
+            int total = 0;
+            for(int i = 0; i < sumList.size(); i++){
+                total += sumList.get(i);
+            }
+            System.out.println(total);
         }
     }
+
+
+    private static String priorityOperator(int a, int b, String op) {
+        String result = "";
+        switch (op) {
+            case "*":
+                result = String.valueOf(a * b);
+                break;
+
+            case "/":
+                if (b == 0) {
+                    result = "0除算エラー";
+                } else {
+                    result = String.valueOf(a / b);
+                }
+                break;
+            default:
+                break;
+        }
+        return result;
+
+    }
+
+
+
 }
